@@ -3,7 +3,8 @@ Modify RootsMagic database so that anyone with many descendant generations is se
 
 Please run initially on a test database or a copy of an operational database.
 
-Requires Python 3.6+
+- Requires Python 3.6+
+- RootsMagic version 7 and 8
 
 ## Usage ##
 ```
