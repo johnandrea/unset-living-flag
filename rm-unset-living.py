@@ -13,23 +13,53 @@ Copyright (c) 2021 John A. Andrea
 
 Code is provided AS IS.
 No support, discussion, maintenance, etc. is included or implied.
-v1.0
+v1.1
 '''
 
 import sys
 import os
 import sqlite3
+import argparse
 
 
-# Anyone with more than this many generations of descendants
-# will have their "living" flag set to false.
-OLDEST_GEN = 4
+def get_program_options():
+    results = dict()
 
-# Set to false to prevent database changes.
-MAKE_CHANGES = True
+    # defaults
+    results['dry-run'] = False
+    results['verbose'] = False
+    results['max-age'] = 120
+    results['max-gen'] = 4
+    results['infile'] = None
 
-# Show the genertion count for every person, ie. not just those being changed
-PRINT_EVERY_PERSON = False
+    arg_help = 'Unset the living flag based on age and descendent generations.'
+    parser = argparse.ArgumentParser( description=arg_help )
+
+    parser.add_argument('infile', type=argparse.FileType('r') )
+
+    arg_help = 'Do not change the database. Default: not selected'
+    parser.add_argument( '--dry-run', action='store_true', help=arg_help )
+
+    arg_help = 'Show everyone regardless of changes. Default: not selected'
+    parser.add_argument( '--verbose', action='store_true', help=arg_help  )
+
+    #arg_help = 'Consider anyone deceased who was born or died this many years ago.'
+    #arg_help += ' Default: ' + str(results['max-age'])
+    #parser.add_argument( '--max-age', default=results['max-age'], type=int, help=arg_help )
+
+    arg_help = 'Consider anyone deceased who has more that this many generations of descendents.'
+    arg_help += ' Default: ' + str( results['max-gen'] )
+    parser.add_argument( '--max-gen', default=results['max-gen'], type=int, help=arg_help )
+
+    args = parser.parse_args()
+
+    results['dry-run'] = args.dry_run
+    results['verbose'] = args.verbose
+    #results['max-age'] = args.max_age
+    results['max-gen'] = args.max_gen
+    results['infile'] = args.infile.name
+
+    return results
 
 
 def change_settings( db_file, id_list ):
@@ -174,11 +204,9 @@ def count_generations( p ):
     return result
 
 
-if len( sys.argv ) < 1:
-   print( 'Give name of input file as the parameter', file=sys.stderr )
-   sys.exit( 1 )
+options = get_program_options()
 
-db_file = sys.argv[1]
+db_file = options['infile']
 if db_file.lower().endswith( '.rmgc' ) or db_file.lower().endswith( '.rmtree' ):
    if os.path.isfile( db_file ):
 
@@ -200,13 +228,13 @@ if db_file.lower().endswith( '.rmgc' ) or db_file.lower().endswith( '.rmtree' ):
       for p in people:
           count = people[p]['gen-count']
           name = names[p]['surname'] + ', ' + names[p]['given']
-          if PRINT_EVERY_PERSON:
+          if options['verbose']:
              print( 'id', p, name, '=', count )
-          if count > OLDEST_GEN:
+          if count > options['max-gen']:
              if people[p]['living']:
                 # needs to be a tuple for the database action
                 to_change.append( (p,) )
-                if not PRINT_EVERY_PERSON:
+                if not options['verbose']:
                    print( 'id', p, name, '=', count )
                 print( '   to be changed' )
 
