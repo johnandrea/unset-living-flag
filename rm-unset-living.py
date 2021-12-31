@@ -13,12 +13,13 @@ Copyright (c) 2021 John A. Andrea
 
 Code is provided AS IS.
 No support, discussion, maintenance, etc. is included or implied.
-v1.1
+v2.1
 '''
 
 import sys
 import os
 import sqlite3
+import datetime
 import argparse
 
 
@@ -26,6 +27,7 @@ def get_program_options():
     results = dict()
 
     # defaults
+    results['sql-out'] = False
     results['dry-run'] = False
     results['verbose'] = False
     results['max-age'] = 120
@@ -43,9 +45,12 @@ def get_program_options():
     arg_help = 'Show everyone regardless of changes. Default: not selected'
     parser.add_argument( '--verbose', action='store_true', help=arg_help  )
 
-    #arg_help = 'Consider anyone deceased who was born or died this many years ago.'
-    #arg_help += ' Default: ' + str(results['max-age'])
-    #parser.add_argument( '--max-age', default=results['max-age'], type=int, help=arg_help )
+    arg_help = 'Output SQL statements for the updates for later database changes.'
+    parser.add_argument( '--sql-out', action='store_true', help=arg_help )
+
+    arg_help = 'Consider anyone deceased who was born or died this many years ago.'
+    arg_help += ' Default: ' + str(results['max-age'])
+    parser.add_argument( '--max-age', default=results['max-age'], type=int, help=arg_help )
 
     arg_help = 'Consider anyone deceased who has more that this many generations of descendents.'
     arg_help += ' Default: ' + str( results['max-gen'] )
@@ -53,16 +58,28 @@ def get_program_options():
 
     args = parser.parse_args()
 
+    results['sql-out'] = args.sql_out
     results['dry-run'] = args.dry_run
     results['verbose'] = args.verbose
-    #results['max-age'] = args.max_age
+    results['max-age'] = args.max_age
     results['max-gen'] = args.max_gen
     results['infile'] = args.infile.name
+
+    # this selection forces other behaviour
+    if results['sql-out']:
+       results['verbose'] = False
+       results['dry-run'] = True
 
     return results
 
 
-def change_settings( db_file, id_list ):
+def show_sql( p, name, count ):
+    print( '' )
+    print( '--', name, 'gen count', count )
+    print( 'update PersonTable set Living=0 where PersonID=', p, ';' )
+
+
+def change_db_flag( db_file, id_list ):
     try:
       conn = sqlite3.connect( db_file )
       cur = conn.cursor()
@@ -88,13 +105,13 @@ def from_name_table( db_file ):
       conn = sqlite3.connect( db_file )
       cur = conn.cursor()
 
-      sql = 'select OwnerId, Surname, Given'
+      sql = 'select OwnerId, Surname, Given, BirthYear, DeathYear'
       sql += ' from NameTable'
       sql += ' where NameType = 0 and IsPrimary > 0'
 
       cur.execute( sql )
       for row in cur:
-          data[row[0]] = { 'surname': row[1], 'given': row[2] }
+          data[row[0]] = { 'surname':row[1], 'given':row[2], 'birth':row[3], 'death':row[4] }
 
       cur.close()
 
@@ -155,12 +172,19 @@ def from_people_table( db_file ):
       sql = 'select PersonId, Living'
       sql += ' from PersonTable'
 
-      # initialize each count to None which will be tested differently than zero
-      # when the counting is performed
-
       cur.execute( sql )
       for row in cur:
-          data[row[0]] = { 'living': row[1], 'gen-count': None, 'families': [] }
+          p_id = row[0]
+
+          data[p_id] = { 'living': row[1] }
+
+          # additional items not from the database
+          # initialize each count to None which will be tested differently than zero
+          # when the counting is performed
+
+          data[p_id]['gen-count'] = None
+          data[p_id]['families'] = []
+          data[p_id]['too-old'] = False
 
       cur.close()
 
@@ -204,23 +228,42 @@ def count_generations( p ):
     return result
 
 
+def check_age( p, max_age, this_year ):
+    global names
+
+    result = False
+    if p in names:
+       if names[p]['death']:
+          # if there is a death...
+          result = True
+       if not result:
+          if names[p]['birth']:
+             result = ( this_year - names[p]['birth'] ) > max_age
+
+    return result
+
+
 options = get_program_options()
 
 db_file = options['infile']
 if db_file.lower().endswith( '.rmgc' ) or db_file.lower().endswith( '.rmtree' ):
    if os.path.isfile( db_file ):
 
+      this_year = datetime.datetime.now().year
+
       people = from_people_table( db_file )
       names = from_name_table( db_file )
       families = from_family_table( db_file )
 
-      print( 'people count', len(people) )
+      if options['verbose']:
+         print( 'people count', len(people) )
 
       set_child_of_family()
 
       for p in people:
           if people[p]['gen-count'] is None:
              people[p]['gen-count'] = count_generations( p )
+          people[p]['too-old'] = check_age( p, options['max-age'], this_year )
 
       # track the ids which need to be updated
       to_change = []
@@ -228,22 +271,37 @@ if db_file.lower().endswith( '.rmgc' ) or db_file.lower().endswith( '.rmtree' ):
       for p in people:
           count = people[p]['gen-count']
           name = names[p]['surname'] + ', ' + names[p]['given']
+          birth = names[p]['birth']
+          death = names[p]['death']
+          if birth or death:
+             name += ' ('
+             if birth:
+                name += str(birth)
+             name += '-'
+             if death:
+                name += str(death)
+             name += ')'
           if options['verbose']:
              print( 'id', p, name, '=', count )
-          if count > options['max-gen']:
-             if people[p]['living']:
+          if people[p]['living']:
+             if count > options['max-gen'] or people[p]['too-old']:
                 # needs to be a tuple for the database action
                 to_change.append( (p,) )
-                if not options['verbose']:
-                   print( 'id', p, name, '=', count )
-                print( '   to be changed' )
+                if options['sql-out']:
+                   show_sql( p, name, count )
+                else:
+                   if not options['verbose']:
+                      print( 'id', p, name, '=', count )
+                   print( '   to be changed' )
 
-      print( 'changes', len( to_change ) )
-      if to_change:
+      if not options['sql-out']:
+         if options['verbose']:
+            print( 'changes', len( to_change ) )
          if options['dry-run']:
-            print( 'No change, dry run' )
+            print( 'No changes - dry run' )
          else:
-            change_settings( db_file, to_change )
+            if to_change:
+               change_db_flag( db_file, to_change )
 
    else:
       print( 'File not found:', db_file, file=sys.stderr )
