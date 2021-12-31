@@ -14,10 +14,13 @@ unset-living-flag.py  datafile.rmgc  >report.out
 ## Options ## 
 
 --max-gen MAXGEN
-Anyone with more than this many generations of descendants will have their "living" flag set to false.
+
+Anyone with more than this many generations of descendants will have their "living" flag set to false. Default 4
 
 --dry-run
+
 Do not change the database.
 
 --verbose
-Show the genertion count for every person, ie. not just those being changed
+
+Show the generation count for every person, ie. not just those being changed
