@@ -31,5 +31,5 @@ Show the generation count for every person, ie. not just those being changed
 
 --sql-out
 
-Output SQL statements, for later manual updates, to standard out. Disables --verbose and enables
- --dry-run
+Output SQL statements, for later manual updates, to standard out. Enables
+ --dry-run and disables --verbose
