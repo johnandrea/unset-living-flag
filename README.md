@@ -8,7 +8,7 @@ Please run initially on a test database or a copy of an operational database.
 
 ## Usage ##
 ```
-unset-living-flag.py  datafile.rmgc  >report.out
+rm-unset-living-flag.py  datafile.rmgc  >report.out
 ```
 
 ## Options ## 
