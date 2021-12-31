@@ -17,6 +17,10 @@ rm-unset-living.py  datafile.rmgc  >report.out
 
 Anyone with more than this many generations of descendants will have their "living" flag set to false. Default 4
 
+--max-age MAXAGE
+
+Anyone born this many years ago is considered deceased and will be changed. Default 120
+
 --dry-run
 
 Do not change the database.
@@ -24,3 +28,8 @@ Do not change the database.
 --verbose
 
 Show the generation count for every person, ie. not just those being changed
+
+--sql-out
+
+Output SQL statements, for later manual updates, to standard out. Disables --verbose and enables
+ --dry-run
