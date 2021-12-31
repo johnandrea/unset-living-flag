@@ -11,17 +11,13 @@ Please run initially on a test database or a copy of an operational database.
 unset-living-flag.py  datafile.rmgc  >report.out
 ```
 
-## Settings ## 
-Within the program are variables for different operations:
+## Options ## 
 
+--max-gen MAXGEN
 Anyone with more than this many generations of descendants will have their "living" flag set to false.
 
-OLDEST_GEN = 4
+--dry-run
+Do not change the database.
 
-Set to false to prevent database changes.
-
-MAKE_CHANGES = True
-
+--verbose
 Show the genertion count for every person, ie. not just those being changed
-
-PRINT_EVERY_PERSON = False
