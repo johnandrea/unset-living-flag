@@ -240,7 +240,10 @@ if db_file.lower().endswith( '.rmgc' ) or db_file.lower().endswith( '.rmtree' ):
 
       print( 'changes', len( to_change ) )
       if to_change:
-         change_settings( db_file, to_change )
+         if options['dry-run']:
+            print( 'No change, dry run' )
+         else:
+            change_settings( db_file, to_change )
 
    else:
       print( 'File not found:', db_file, file=sys.stderr )
