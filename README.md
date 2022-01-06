@@ -11,6 +11,11 @@ Please run initially on a test database or a copy of an operational database.
 rm-unset-living.py  datafile.rmgc  >report.out
 ```
 
+or to check on people without making any changes
+```
+rm-unset-living.py --dry-run  datafile.rmgc  >report.out
+```
+
 ## Options ## 
 
 --max-gen MAXGEN
