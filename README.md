@@ -15,7 +15,7 @@ rm-unset-living.py  datafile.rmgc  >report.out
 
 --max-gen MAXGEN
 
-Anyone with more than this many generations of descendants will have their "living" flag set to false. Default 4
+Anyone with more than this many generations of descendents will have their "living" flag set to false. Default 4
 
 --max-age MAXAGE
 
