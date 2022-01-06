@@ -1,5 +1,5 @@
 # unset-living-flag
-Modify RootsMagic database so that anyone with many descendant generations is set to non-living.
+Modify RootsMagic database so that anyone with many descendent generations is set to non-living.
 
 Please run initially on a test database or a copy of an operational database.
 
