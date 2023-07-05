@@ -34,6 +34,10 @@ Do not change the database.
 
 Show the generation count for every person, ie. not just those being changed
 
+## Bugs ##
+
+- Persons without primary names will be skipped. I'm looking into this issue.
+
 --sql-out
 
 Output SQL statements, for later manual updates, to standard out. Enables
