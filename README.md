@@ -4,7 +4,7 @@ Modify RootsMagic database so that anyone with many descendent generations is se
 Please run initially on a test database or a copy of an operational database.
 
 - Requires Python 3.6+
-- RootsMagic version 7 and 8
+- RootsMagic version 7, 8, 9
 
 ## Usage ##
 ```
@@ -41,4 +41,3 @@ Output SQL statements, for later manual updates, to standard out. Enables
 
 ## Bugs ##
 
-- Persons without primary names will be skipped. I'm looking into this issue.
