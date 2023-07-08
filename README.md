@@ -41,3 +41,4 @@ Output SQL statements, for later manual updates, to standard out. Enables
 
 ## Bugs ##
 
+This code is provided with neither support nor warranty.
