@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 '''
-Update a RootsMagic database file (v7/v8) so that anyone above a set limit of
+Update a RootsMagic database file (v7/v8/v9) so that anyone above a set limit of
 descendant generations is set to not-living. The limit is set below.
    A list of the people being changed is printed to standard out.
 Give the name of the database file as the program parameter.
@@ -13,7 +13,7 @@ Copyright (c) 2021 John A. Andrea
 
 Code is provided AS IS.
 No support, discussion, maintenance, etc. is included or implied.
-v2.1
+v2.2
 '''
 
 import sys
@@ -107,7 +107,7 @@ def from_name_table( db_file ):
 
       sql = 'select OwnerId, Surname, Given, BirthYear, DeathYear'
       sql += ' from NameTable'
-      sql += ' where NameType = 0 and IsPrimary > 0'
+      sql += ' where IsPrimary > 0'
 
       cur.execute( sql )
       for row in cur:
